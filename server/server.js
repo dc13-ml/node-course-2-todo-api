@@ -13,6 +13,7 @@ var app = express();
 var port = process.env.PORT;
 
 app.use(bodyParser.json());
+
 app.post('/todos', (req,res)=>{
     var todo = new Todo({
         text: req.body.text
@@ -86,6 +87,20 @@ app.patch('/todos/:id', (req,res)=>{
         res.status(400).send(err);
     });
 });
+
+//
+// Create a new user
+//
+app.post('/users', (req,res)=>{
+    var body = _.pick(req.body, ['email', 'password']);
+    var user = new User(body);
+    user.save().then((doc)=>{
+        res.send(doc);
+    }).catch((err) => {
+        res.status(400).send(err)
+    });
+});
+
 
 app.listen(port, ()=>{
     console.log(`Started on port ${port}`);
