@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 // prepare 2 user test collection
 const userOneId = new ObjectID();
 const userTwoId = new ObjectID();
-const secretSalt = 'abc131'
+const secretSalt = process.env.JWT_SECRET;
 const users = [{
     _id: userOneId,
     email: 'test1@test.com',
