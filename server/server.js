@@ -44,12 +44,15 @@ app.get('/todos', authenticate, (req,res)=>{
 });
 
 
-app.get('/todos/:id', (req,res)=>{
+app.get('/todos/:id', authenticate, (req,res)=>{
     var id = req.params.id;
     if (!ObjectID.isValid(id)) {
         return res.status(404).send('Invalid object ID');
     };
-    Todo.findById(id).then((todo)=>{
+    Todo.findOne({
+        _id: id,
+        _creator: req.user._id
+    }).then((todo)=>{
         if (!todo) {
             return res.status(404).send("Unable to find object");
         }
@@ -59,12 +62,15 @@ app.get('/todos/:id', (req,res)=>{
     });
 });
 
-app.delete('/todos/:id', (req,res)=>{
+app.delete('/todos/:id', authenticate, (req,res)=>{
     var id = req.params.id;
     if (!ObjectID.isValid(id)) {
         return res.status(404).send('Invalid object ID');
     };
-    Todo.findByIdAndRemove(id).then((todo)=>{
+    Todo.findOneAndRemove({
+        _id: id,
+        _creator: req.user._id
+    }).then((todo)=>{
         if (!todo) {
             return res.status(404).send(`Unable to find object with id: ${id}`);
         }
@@ -74,7 +80,7 @@ app.delete('/todos/:id', (req,res)=>{
     });
 });
 
-app.patch('/todos/:id', (req,res)=>{
+app.patch('/todos/:id', authenticate, (req,res)=>{
     var id = req.params.id;
     // pick out only the fields that users can update
     var body = _.pick(req.body, ['text', 'completed']);
@@ -87,7 +93,7 @@ app.patch('/todos/:id', (req,res)=>{
         body.completed = false;
         body.completedAt = null;
     };
-    Todo.findByIdAndUpdate(id, {$set: body}, {new:true}).then((todo)=>{
+    Todo.findOneAndUpdate({_id: id, _creator:req.user._id}, {$set: body}, {new:true}).then((todo)=>{
         if (!todo) {
             return res.status(404).send(`Unable to find object with id: ${id}`);
         }

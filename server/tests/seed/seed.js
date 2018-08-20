@@ -14,11 +14,15 @@ const users = [{
     tokens: [{
         access: 'auth',
         token: jwt.sign({_id: userOneId, access: 'auth'}, secretSalt).toString()
-        }],
+        }]
     }, {
     _id: userTwoId,
     email: 'test2@test.com',
-    password: 'test2pwd'
+    password: 'test2pwd',
+    tokens: [{
+        access: 'auth',
+        token: jwt.sign({_id: userTwoId, access: 'auth'}, secretSalt).toString()
+        }]
 }];
 
 // prepare 2 todo test collection
