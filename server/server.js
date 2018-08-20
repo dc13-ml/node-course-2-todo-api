@@ -15,9 +15,13 @@ var port = process.env.PORT;
 
 app.use(bodyParser.json());
 
-app.post('/todos', (req,res)=>{
+//
+// Create a todo
+//
+app.post('/todos', authenticate, (req,res)=>{
     var todo = new Todo({
-        text: req.body.text
+        text: req.body.text,
+        _creator: req.user._id
     });
     todo.save().then((doc)=>{
         res.send(doc);
@@ -26,8 +30,13 @@ app.post('/todos', (req,res)=>{
     });
 });
 
-app.get('/todos', (req,res)=>{
-    Todo.find().then((todos)=>{
+//
+// Retrieve todos associated with a user
+//
+app.get('/todos', authenticate, (req,res)=>{
+    Todo.find({
+        _creator: req.user._id
+    }).then((todos)=>{
         res.send({todos});
     }, (err)=>{
         res.status(400).send(err);
@@ -60,9 +69,8 @@ app.delete('/todos/:id', (req,res)=>{
             return res.status(404).send(`Unable to find object with id: ${id}`);
         }
         res.send({todo});
-    }, (err)=>{
-        // catch all scenario
-        res.status(400).send(err);
+    }).catch((e)=>{
+        res.status(400).send();
     });
 });
 
