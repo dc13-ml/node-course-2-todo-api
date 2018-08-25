@@ -62,22 +62,23 @@ app.get('/todos/:id', authenticate, (req,res)=>{
     });
 });
 
-app.delete('/todos/:id', authenticate, (req,res)=>{
-    var id = req.params.id;
+app.delete('/todos/:id', authenticate, async (req,res)=>{
+    const id = req.params.id;
     if (!ObjectID.isValid(id)) {
         return res.status(404).send('Invalid object ID');
     };
-    Todo.findOneAndRemove({
-        _id: id,
-        _creator: req.user._id
-    }).then((todo)=>{
+    try {
+        const todo = await Todo.findOneAndRemove({
+            _id: id,
+            _creator: req.user._id
+        });
         if (!todo) {
             return res.status(404).send(`Unable to find object with id: ${id}`);
         }
-        res.send({todo});
-    }).catch((e)=>{
+        res.send({todo});    
+    } catch(e) {
         res.status(400).send();
-    });
+    };
 });
 
 app.patch('/todos/:id', authenticate, (req,res)=>{
@@ -106,38 +107,48 @@ app.patch('/todos/:id', authenticate, (req,res)=>{
 //
 // Create a new user
 //
-app.post('/users', (req,res)=>{
-    var body = _.pick(req.body, ['email', 'password']);
-    var user = new User(body);
+app.post('/users', async (req,res)=>{
+    const body = _.pick(req.body, ['email', 'password']);
+    const user = new User(body);
     
-    user.save().then(()=>{
-        return user.generateAuthToken();
-    }).then((token)=>{
-        res.header('x-auth', token).send(user);
-    }).catch((err) => {
+    try {
+        await user.save();
+        const token = await user.generateAuthToken();
+        res.header('x-auth', token).send(user);    
+    } catch(err) {
         res.status(400).send(err)
-    });
+    };
 });
 
-app.post('/users/login', (req,res)=>{
-    var body = _.pick(req.body, ['email', 'password']);
+app.post('/users/login', async (req,res)=>{
+    const body = _.pick(req.body, ['email', 'password']);
 
-    User.findByCredentials(body.email, body.password).then((user)=>{
-        return user.generateAuthToken().then((token)=>{
-            res.header('x-auth', token).send(user);           
-        });
-    }).catch((err)=>{
+    try {
+        const user = await User.findByCredentials(body.email, body.password);
+        const token = await user.generateAuthToken();
+        res.header('x-auth', token).send(user);               
+    } catch (err) {
         res.status(400).send();
-    });
+    };
 });
 
-app.delete('/users/me/token', authenticate, (req,res)=>{
-    req.user.removeToken(req.token).then(()=>{
-        res.status(200).send();
-    }, () => {
+app.delete('/users/me/token', authenticate, async (req,res)=>{
+
+    try {
+         await req.user.removeToken(req.token);
+        res.status(200).send();    
+    } catch (e) {
         res.status(400).send()
-    });
+    };
 });
+
+// app.delete('/users/me/token', authenticate, (req,res)=>{
+//     req.user.removeToken(req.token).then(()=>{
+//         res.status(200).send();
+//     }, () => {
+//         res.status(400).send()
+//     });
+// });
 
 app.get('/users/me', authenticate, (req,res)=>{
     res.send(req.user);
